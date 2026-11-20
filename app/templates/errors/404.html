@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Không tìm thấy{% endblock %}
+{% block content %}
+<div class="error-card">
+  <i class="bi bi-question-circle error-icon"></i>
+  <h1>404</h1>
+  <p>Không tìm thấy trang bạn yêu cầu</p>
+  <a class="btn btn-outline-primary" href="{{ url_for('events.list_events') }}"><i class="bi bi-arrow-left me-2"></i>Về danh sách sự kiện</a>
+</div>
+{% endblock %}

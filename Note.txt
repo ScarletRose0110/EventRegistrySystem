@@ -1,0 +1,7 @@
+Note
+
+xong value -> cần suy ra lesoson learn
+Cần chia ra công việc các sprint thành Schedule thực tế và giả định -> Dựa trên kết quả thực tế để xác định được các point sau đó tính được EVM
+cần project charter ( Như BTN)
+Xác định milestone
+

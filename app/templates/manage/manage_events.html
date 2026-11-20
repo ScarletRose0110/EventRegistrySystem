@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Quản lý sự kiện{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Quản lý sự kiện</h1>
+    <p class="page-sub mb-0">
+      {% if can_manage_all %}Bạn đang xem mọi sự kiện (quyền Admin){% else %}Sự kiện do bạn tạo hoặc của phòng ban bạn{% endif %}
+    </p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('manage.create_event') }}"><i class="bi bi-plus-lg me-1"></i>Tạo sự kiện mới</a>
+</div>
+{% if items %}
+<div class="card detail-card">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0 app-table">
+      <thead>
+        <tr>
+          <th>Sự kiện</th>
+          <th>Trạng thái</th>
+          <th>Thời gian diễn ra</th>
+          <th class="text-center">Đã đăng ký</th>
+          <th class="text-end">Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>
+            <a class="fw-semibold" href="{{ url_for('events.event_detail', event_id=item.event.id) }}">{{ item.event.name }}</a>
+            <div class="small text-muted"><i class="bi bi-buildings me-1"></i>{{ item.event.department.name }}</div>
+          </td>
+          <td><span class="status-badge"><span class="status-dot"></span>{{ item.status }}</span></td>
+          <td class="small">{{ item.event.start_time.strftime('%d/%m/%Y %H:%M') }}</td>
+          <td class="text-center">{{ item.active_count }}/{{ item.event.max_attendees }}</td>
+          <td class="text-end">
+            <div class="btn-group">
+              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('manage.event_registrations', event_id=item.event.id) }}"><i class="bi bi-people me-1"></i>Người đăng ký</a>
+              <a class="btn btn-sm btn-outline-primary" href="{{ url_for('manage.edit_event', event_id=item.event.id) }}"><i class="bi bi-pencil me-1"></i>Sửa</a>
+              {% if not item.event.is_cancelled %}
+              <button type="button" class="btn btn-sm btn-outline-danger"
+                      data-bs-toggle="modal" data-bs-target="#cancelModal"
+                      data-cancel-event="{{ item.event.id }}" data-event-name="{{ item.event.name }}">
+                <i class="bi bi-x-circle me-1"></i>Hủy
+              </button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-info app-alert"><i class="bi bi-inbox me-2"></i>Bạn chưa quản lý sự kiện nào. Hãy tạo sự kiện đầu tiên!</div>
+{% endif %}
+
+{# Hộp thoại xác nhận hủy (US-04B-AC4) — hiển thị trong trang, không bị trình duyệt chặn #}
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cancelModalLabel">Xác nhận hủy sự kiện</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2">Bạn có chắc muốn hủy sự kiện <strong id="cancelEventName"></strong>?</p>
+        <small class="text-muted">
+          <i class="bi bi-info-circle me-1"></i>
+          Sự kiện sẽ chuyển sang trạng thái "Đã hủy" và thông báo được gửi tới người đã đăng ký. Thao tác không thể hoàn tác.
+        </small>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Giữ nguyên</button>
+        <button type="button" class="btn btn-danger" id="cancelConfirmBtn"><i class="bi bi-x-circle me-1"></i>Hủy sự kiện</button>
+      </div>
+    </div>
+  </div>
+</div>
+<form id="cancelForm" method="post" class="d-none">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
+<script>
+document.querySelectorAll('[data-cancel-event]').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var form = document.getElementById('cancelForm');
+    form.action = '/manage/events/' + btn.dataset.cancelEvent + '/cancel';
+    document.getElementById('cancelEventName').textContent = btn.dataset.eventName;
+  });
+});
+document.getElementById('cancelConfirmBtn').addEventListener('click', function () {
+  document.getElementById('cancelForm').submit();
+});
+</script>
+{% endblock %}

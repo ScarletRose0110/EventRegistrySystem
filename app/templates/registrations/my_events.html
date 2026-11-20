@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Header tiêu đề -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-2 border-bottom border-secondary">
+    <div>
+      <h2 class="fw-bold mb-1">Sự kiện của tôi</h2>
+      <p class="text-muted mb-0">Theo dõi trạng thái tham gia các sự kiện nội bộ bạn đã đăng ký</p>
+    </div>
+    <div class="mt-3 mt-md-0">
+      <a href="{{ url_for('events.index') }}" class="btn btn-outline-light btn-sm">
+        <i class="bi bi-search me-1"></i> Khám phá sự kiện mới
+      </a>
+    </div>
+  </div>
+
+  <!-- Bộ lọc Tabs trạng thái -->
+  <div class="d-flex gap-2 mb-4 overflow-auto pb-2">
+      <a href="{{ url_for('registrations.my_events', status='all') }}" 
+      class="btn btn-sm {% if current_status == 'all' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      Tất cả
+    </a>
+    <a href="{{ url_for('registrations.my_events', status='Registered') }}" 
+      class="btn btn-sm {% if current_status == 'Registered' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      Đã đăng ký
+    </a>
+    <a href="{{ url_for('registrations.my_events', status='Attended') }}" 
+      class="btn btn-sm {% if current_status == 'Attended' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      Đã tham gia
+    </a>
+    <a href="{{ url_for('registrations.my_events', status='Cancelled') }}" 
+      class="btn btn-sm {% if current_status == 'Cancelled' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+      Đã hủy
+    </a>
+  </div>
+
+  <!-- Danh sách sự kiện -->
+  {% if events_data %}
+    <div class="row g-4">
+      {% for item in events_data %}
+        {% set reg = item.registration %}
+        {% set event = item.event %}
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="card h-100 bg-dark text-white border-secondary shadow-sm" style="border-radius: 12px;">
+            <div class="card-body d-flex flex-column justify-content-between p-4">
+              <div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="text-muted small">
+                    {% if reg.created_at is defined and reg.created_at %}
+                        {{ reg.created_at.strftime('%d/%m/%Y') }}
+                    {% elif reg.registered_at is defined and reg.registered_at %}
+                        {{ reg.registered_at.strftime('%d/%m/%Y') }}
+                    {% else %}
+                        Mã ĐK: #{{ reg.id }}
+                    {% endif %}
+                  </span>
+                  {% if reg.status == 'Registered' %}
+                    <span class="badge status-badge">Đã đăng ký</span>
+                  {% elif reg.status == 'Attended' %}
+                    <span class="badge bg-primary bg-opacity-25 text-info">Đã tham dự</span>
+                  {% elif reg.status == 'Cancelled' %}
+                    <span class="badge bg-danger bg-opacity-25 text-danger">Đã hủy</span>
+                  {% endif %}
+                </div>
+
+                <h5 class="card-title fw-bold mb-3">
+                  <a href="{{ url_for('events.event_detail', event_id=event.id) }}" class="text-decoration-none text-white">
+                    {{ event.name }}
+                  </a>
+                </h5>
+
+                <div class="text-muted small d-flex flex-column gap-2 mb-3">
+                  <div>
+                    <i class="bi bi-calendar-event me-2 text-primary"></i>
+                    {{ event.start_time.strftime('%H:%M - %d/%m/%Y') if event.start_time else '' }}
+                  </div>
+                  <div>
+                    <i class="bi bi-geo-alt me-2 text-danger"></i>
+                    {{ event.location }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Nút hành động -->
+              <div class="pt-3 border-top border-secondary d-flex justify-content-between align-items-center">
+                <a href="{{ url_for('events.event_detail', event_id=event.id) }}" class="btn btn-sm btn-outline-light">
+                  Chi tiết
+                </a>
+
+                {% if item.can_cancel %}
+                  <form action="{{ url_for('registrations.cancel_registration', event_id=event.id) }}" method="POST"
+                        onsubmit="return confirm('Bạn có chắc chắn muốn hủy đăng ký tham gia sự kiện này?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                      Hủy đăng ký
+                    </button>
+                  </form>
+                {% elif reg.status == 'Registered' %}
+                  <small class="text-muted fst-italic">Hết hạn hủy</small>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-5 my-5 bg-dark rounded-3 border border-secondary">
+      <h5 class="text-white">Không có sự kiện nào</h5>
+      <p class="text-muted">Bạn chưa đăng ký sự kiện nào trong danh mục này.</p>
+      <a href="{{ url_for('events.index') }}" class="btn btn-primary mt-2">
+        Xem sự kiện đang mở
+      </a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

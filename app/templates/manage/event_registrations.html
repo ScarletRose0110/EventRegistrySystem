@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}Người đăng ký – {{ event.name }}{% endblock %}
+{% block content %}
+{% set badge_class = {
+  'Registered': 'bg-primary', 'Confirmed': 'bg-success', 'Rejected': 'bg-warning text-dark',
+  'Attended': 'bg-info text-dark', 'Cancelled': 'bg-secondary'} %}
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb mb-3">
+    <li class="breadcrumb-item"><a href="{{ url_for('manage.manage_events') }}">Quản lý sự kiện</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Người đăng ký</li>
+  </ol>
+</nav>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ event.name }}</h1>
+    <p class="page-sub mb-0">
+      <i class="bi bi-calendar-event me-1"></i>{{ event.start_time.strftime('%d/%m/%Y %H:%M') }}
+      · <i class="bi bi-geo-alt me-1"></i>{{ event.location }}
+      · <i class="bi bi-buildings me-1"></i>{{ event.department.name }}
+    </p>
+  </div>
+  <a class="btn btn-outline-secondary" href="{{ url_for('events.event_detail', event_id=event.id) }}">
+    <i class="bi bi-eye me-1"></i>Xem chi tiết sự kiện
+  </a>
+</div>
+
+{# US-10-AC4: số đã đăng ký / tối đa và số lượng theo từng trạng thái #}
+<div class="card detail-card mb-3">
+  <div class="card-body d-flex flex-wrap align-items-center gap-3">
+    <div>
+      <div class="small text-muted">Đã đăng ký</div>
+      <div class="fs-4 fw-semibold">{{ active_count }}/{{ event.max_attendees }}</div>
+    </div>
+    <div class="vr d-none d-md-block"></div>
+    <div class="d-flex flex-wrap gap-2">
+      {% for key, label in status_labels.items() %}
+        <span class="badge {{ badge_class[key] }} fs-6 fw-normal">{{ label }}: {{ counts[key] }}</span>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{# US-10-AC2/AC3: tìm theo họ tên, lọc theo trạng thái và phòng ban #}
+<form method="get" class="row g-2 mb-3">
+  <div class="col-12 col-md-5">
+    <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Tìm theo họ tên (có dấu hoặc không dấu)">
+  </div>
+  <div class="col-6 col-md-3">
+    <select name="status" class="form-select" aria-label="Trạng thái">
+      <option value="">Mọi trạng thái</option>
+      {% for key, label in status_labels.items() %}
+        <option value="{{ key }}" {% if status == key %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-6 col-md-2">
+    <select name="department" class="form-select" aria-label="Phòng ban">
+      <option value="">Mọi phòng ban</option>
+      {% for d in departments %}
+        <option value="{{ d.id }}" {% if department == d.id %}selected{% endif %}>{{ d.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-12 col-md-2 d-flex gap-2">
+    <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-search me-1"></i>Lọc</button>
+    {% if has_filter %}
+      <a class="btn btn-outline-secondary" href="{{ url_for('manage.event_registrations', event_id=event.id) }}" title="Xóa bộ lọc"><i class="bi bi-x-lg"></i></a>
+    {% endif %}
+  </div>
+</form>
+
+{# US-10-AC1/AC5 #}
+{% if rows %}
+<div class="card detail-card">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0 app-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Họ tên</th>
+          <th>Phòng ban</th>
+          <th>Trạng thái</th>
+          <th>Thời điểm đăng ký</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for reg, user in rows %}
+        <tr>
+          <td class="text-muted">{{ loop.index }}</td>
+          <td>
+            <div class="fw-semibold">{{ user.full_name }}</div>
+            <div class="small text-muted">{{ user.email }}</div>
+          </td>
+          <td>{{ user.department.name }}</td>
+          <td>
+            <span class="badge {{ badge_class.get(reg.status, 'bg-secondary') }} fw-normal">{{ status_labels.get(reg.status, reg.status) }}</span>
+            {% if reg.status == 'Rejected' and reg.rejection_reason %}
+              <div class="small text-muted mt-1">Lý do: {{ reg.rejection_reason }}</div>
+            {% endif %}
+          </td>
+          <td class="small">{{ reg.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% elif total == 0 %}
+<div class="alert alert-info app-alert"><i class="bi bi-inbox me-2"></i>Sự kiện chưa có người đăng ký</div>
+{% else %}
+<div class="alert alert-warning app-alert"><i class="bi bi-search me-2"></i>Không tìm thấy người đăng ký phù hợp</div>
+{% endif %}
+{% endblock %}

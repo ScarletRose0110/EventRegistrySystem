@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Đăng nhập{% endblock %}
+{% block content %}
+<div class="login-shell mt-4">
+  <aside class="login-brand" aria-hidden="true">
+    <div class="login-brand-inner">
+      <i class="bi bi-calendar2-event-fill login-logo"></i>
+      <h1 class="login-title">XYZ Events</h1>
+      <p class="login-sub">Hệ thống Quản lý &amp; Đăng ký Sự kiện Nội bộ</p>
+      <ul class="login-features">
+        <li><i class="bi bi-search"></i>Tìm kiếm &amp; lọc sự kiện nhanh chóng</li>
+        <li><i class="bi bi-calendar-check"></i>Đăng ký tham gia chỉ với một chạm</li>
+        <li><i class="bi bi-shield-lock"></i>Phân quyền an toàn theo từng vai trò</li>
+      </ul>
+    </div>
+  </aside>
+  <section class="login-panel">
+    <div class="login-card">
+      <h2 class="login-heading">Đăng nhập</h2>
+      <p class="login-hint">Dùng email công ty để tiếp tục</p>
+      <form method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+          {{ form.email.label(class="form-label") }}
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="email@xyz.com", autocomplete="email") }}
+          </div>
+          {% for e in form.email.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+          {{ form.password.label(class="form-label") }}
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), autocomplete="current-password") }}
+          </div>
+          {% for e in form.password.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+        </div>
+        <button type="submit" class="btn btn-primary w-100 py-2"><i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập</button>
+      </form>
+    </div>
+  </section>
+</div>
+{% endblock %}
